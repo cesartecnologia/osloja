@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const produtos = await listProdutos(user.empresaId);
     return NextResponse.json(produtos);
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao listar produtos.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao listar produtos.' },
+      { status: 400 }
+    );
   }
 }
 
@@ -19,9 +22,24 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getRequestUser(request);
     const payload = produtoSchema.parse(await request.json());
-    const id = await saveProduto(user.empresaId, payload);
+
+    if (!payload.nome?.trim()) {
+      return NextResponse.json(
+        { error: 'Nome do produto é obrigatório.' },
+        { status: 400 }
+      );
+    }
+
+    const id = await saveProduto(user.empresaId, {
+      ...payload,
+      nome: payload.nome.trim(),
+    });
+
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao salvar produto.' }, { status: 400 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao salvar produto.' },
+      { status: 400 }
+    );
   }
 }
