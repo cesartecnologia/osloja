@@ -126,7 +126,7 @@ function ErrorText({ message }: { message?: string }) {
 export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> }) {
   const [step, setStep] = useState(0);
   const [patternOpen, setPatternOpen] = useState(false);
-  const [clients, setClients] = useState<Array<Record<string, string>>>([]);
+  const [clients, setClients] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
   const [formAlert, setFormAlert] = useState('');
   const { user } = useAuth();
