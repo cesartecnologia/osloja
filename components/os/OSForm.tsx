@@ -22,6 +22,7 @@ import { listClientes, saveOrdemServico } from '@/lib/client-data';
 import { getPaymentStatusLabel, getStatusLabel } from '@/lib/labels';
 
 type OSFormValues = z.infer<typeof osSchema>;
+type SaveOrdemServicoPayload = Parameters<typeof saveOrdemServico>[1];
 
 const steps = ['Cliente e aparelho', 'Senha do aparelho', 'Serviços', 'Pagamento e observações'];
 
@@ -81,7 +82,10 @@ function normalizeInitialData(initialData?: Partial<OrdemServico>): OSFormValues
     ...initialData,
     cliente: { ...defaultValues.cliente, ...initialData.cliente },
     aparelho: { ...defaultValues.aparelho, ...initialData.aparelho },
-    senha: { ...defaultValues.senha, ...initialData.senha },
+    senha: {
+      tipo: initialData.senha?.tipo ?? 'sem_senha',
+      valor: initialData.senha?.valor ?? ''
+    },
     servicos: initialData.servicos?.length
       ? initialData.servicos.map((item) => ({
           descricao: item.descricao || '',
@@ -155,6 +159,7 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
     }
 
     void load();
+
     return () => {
       ativo = false;
     };
@@ -216,7 +221,11 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
   useEffect(() => {
     form.setValue('pagamento.saldoDevedor', saldoDevedor);
     const status =
-      watchedEntry > 0 && saldoDevedor > 0 ? 'entrada_paga' : saldoDevedor <= 0 && total > 0 ? 'pago_total' : 'pendente';
+      watchedEntry > 0 && saldoDevedor > 0
+        ? 'entrada_paga'
+        : saldoDevedor <= 0 && total > 0
+          ? 'pago_total'
+          : 'pendente';
     form.setValue('pagamento.statusPagamento', status);
   }, [form, saldoDevedor, total, watchedEntry]);
 
@@ -283,19 +292,8 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
           parcelas: item.tipo === 'cartao_credito' ? Number(item.parcelas || 1) : undefined
         }));
 
-      const payload = {
-        ...values,
-        subtotal,
-        total,
-        servicos: filteredServices,
-        pecas: [],
-        tecnico: '',
-        tecnicoId: '',
-        pagamento: {
-          ...values.pagamento,
-          formas: filteredPayments,
-          saldoDevedor
-        },
+      const payload: SaveOrdemServicoPayload = {
+        id: initialData?.id,
         cliente: {
           nome: String(values.cliente.nome || '').trim(),
           telefone: onlyDigits(values.cliente.telefone),
@@ -310,10 +308,38 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
           cor: values.aparelho.cor || '',
           acessorios: values.aparelho.acessorios || [],
           condicaoEntrada: String(values.aparelho.condicaoEntrada || '').trim()
-        }
+        },
+        senha: {
+          tipo: values.senha?.tipo ?? 'sem_senha',
+          valor: values.senha?.valor ?? ''
+        },
+        servicos: filteredServices,
+        pecas: [],
+        subtotal,
+        desconto: Number(values.desconto || 0),
+        descontoTipo: values.descontoTipo,
+        total,
+        pagamento: {
+          formas: filteredPayments,
+          entrada: Number(values.pagamento?.entrada || 0),
+          saldoDevedor,
+          statusPagamento:
+            Number(values.pagamento?.entrada || 0) > 0 && saldoDevedor > 0
+              ? 'entrada_paga'
+              : saldoDevedor <= 0 && total > 0
+                ? 'pago_total'
+                : 'pendente'
+        },
+        tecnico: '',
+        tecnicoId: '',
+        observacoes: values.observacoes || '',
+        previsaoEntrega: values.previsaoEntrega || '',
+        status: values.status,
+        origemOS: values.origemOS,
+        retiradoPor: values.retiradoPor
       };
 
-      const id = await saveOrdemServico(user, { ...payload, id: initialData?.id });
+      const id = await saveOrdemServico(user, payload);
       const shouldAutoPrint = !initialData?.id;
       window.location.href = shouldAutoPrint ? `/os/${id}?imprimir=retirada&auto=1` : `/os/${id}`;
     } catch (error) {
@@ -492,21 +518,14 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Serviços</CardTitle>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => serviceArray.append({ descricao: '', valor: 0, garantiaDias: 0 })}
-              >
+              <Button type="button" size="sm" onClick={() => serviceArray.append({ descricao: '', valor: 0, garantiaDias: 0 })}>
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar serviço
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {serviceArray.fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[1fr_160px_auto]"
-                >
+                <div key={field.id} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[1fr_160px_auto]">
                   <div>
                     <Input {...form.register(`servicos.${index}.descricao`)} placeholder="Descrição do serviço" />
                     <ErrorText message={form.formState.errors.servicos?.[index]?.descricao?.message} />
@@ -520,10 +539,7 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
                     />
                     <ErrorText message={form.formState.errors.servicos?.[index]?.valor?.message as string | undefined} />
                   </div>
-                  <input
-                    type="hidden"
-                    {...form.register(`servicos.${index}.garantiaDias`, { valueAsNumber: true })}
-                  />
+                  <input type="hidden" {...form.register(`servicos.${index}.garantiaDias`, { valueAsNumber: true })} />
                   <Button
                     type="button"
                     variant="outline"
@@ -582,10 +598,7 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
             ) : null}
 
             {paymentArray.fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[200px_140px_120px_auto]"
-              >
+              <div key={field.id} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[200px_140px_120px_auto]">
                 <Select {...form.register(`pagamento.formas.${index}.tipo`)}>
                   <option value="dinheiro">Dinheiro</option>
                   <option value="pix">PIX</option>
