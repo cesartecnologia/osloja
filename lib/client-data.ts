@@ -144,9 +144,31 @@ export async function getEmpresa(empresaId: string) {
   return ensureEmpresa(empresaId);
 }
 
-export async function updateEmpresa(empresaId: string, payload: Partial<Empresa>) {
+type UpdateEmpresaPayload = Partial<Omit<Empresa, 'configuracoes'>> & {
+  configuracoes?: Partial<Empresa['configuracoes']>;
+};
+
+export async function updateEmpresa(
+  empresaId: string,
+  payload: UpdateEmpresaPayload
+) {
   const ref = doc(db, 'empresa', empresaId);
-  await setDoc(ref, { ...payload, id: empresaId }, { merge: true });
+
+  const current = await getEmpresa(empresaId);
+
+  const merged: Empresa = {
+    ...current,
+    ...payload,
+    id: empresaId,
+    configuracoes: {
+      larguraImpressora:
+        payload.configuracoes?.larguraImpressora ??
+        current.configuracoes?.larguraImpressora ??
+        '58mm'
+    }
+  };
+
+  await setDoc(ref, cleanFirestoreData(merged), { merge: true });
   return getEmpresa(empresaId);
 }
 
