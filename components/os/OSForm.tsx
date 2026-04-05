@@ -181,7 +181,7 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
   const validServices = useMemo(
     () =>
       watchedServices.filter((item) => hasServiceContent(item)).map((item) => ({
-        descricao: item.descricao?.trim() || '',
+        descricao: String(item.descricao || '').trim(),
         valor: Number(item.valor || 0),
         garantiaDias: 0
       })),
@@ -265,7 +265,7 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
       const filteredServices = values.servicos
         .filter((item) => hasServiceContent(item))
         .map((item) => ({
-          descricao: item.descricao.trim(),
+          descricao: String(item.descricao || '').trim(),
           valor: Number(item.valor || 0),
           garantiaDias: 0
         }));
@@ -297,8 +297,19 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
           saldoDevedor
         },
         cliente: {
-          ...values.cliente,
-          telefone: onlyDigits(values.cliente.telefone)
+          nome: String(values.cliente.nome || '').trim(),
+          telefone: onlyDigits(values.cliente.telefone),
+          cpf: values.cliente.cpf || '',
+          email: values.cliente.email || '',
+          endereco: values.cliente.endereco || ''
+        },
+        aparelho: {
+          marca: String(values.aparelho.marca || '').trim(),
+          modelo: String(values.aparelho.modelo || '').trim(),
+          imei: values.aparelho.imei || '',
+          cor: values.aparelho.cor || '',
+          acessorios: values.aparelho.acessorios || [],
+          condicaoEntrada: String(values.aparelho.condicaoEntrada || '').trim()
         }
       };
 
@@ -582,7 +593,11 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
                   <option value="cartao_debito">Cartão de débito</option>
                   <option value="transferencia">Transferência</option>
                 </Select>
-                <Input type="number" step="0.01" {...form.register(`pagamento.formas.${index}.valor`, { valueAsNumber: true })} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...form.register(`pagamento.formas.${index}.valor`, { valueAsNumber: true })}
+                />
                 {form.watch(`pagamento.formas.${index}.tipo`) === 'cartao_credito' ? (
                   <Input
                     type="number"
