@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, TriangleAlert, Trash2 } from 'lucide-react';
 import { z } from 'zod';
 import { osSchema } from '@/lib/validations';
-import type { Cliente, OrdemServico, SessionUser } from '@/types';
+import type { Cliente, OrdemServico } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -179,11 +179,12 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
   }, [watchedClientName, clients, form]);
 
   const validServices = useMemo(
-    () => watchedServices.filter((item) => hasServiceContent(item)).map((item) => ({
-      descricao: item.descricao?.trim() || '',
-      valor: Number(item.valor || 0),
-      garantiaDias: 0
-    })),
+    () =>
+      watchedServices.filter((item) => hasServiceContent(item)).map((item) => ({
+        descricao: item.descricao?.trim() || '',
+        valor: Number(item.valor || 0),
+        garantiaDias: 0
+      })),
     [watchedServices]
   );
 
@@ -226,7 +227,11 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
       const currentServices = form.getValues('servicos');
       const filteredServices = currentServices.filter((item) => hasServiceContent(item));
       if (filteredServices.length !== currentServices.length) {
-        form.setValue('servicos', filteredServices.length ? filteredServices : [{ descricao: '', valor: 0, garantiaDias: 0 }], { shouldValidate: true });
+        form.setValue(
+          'servicos',
+          filteredServices.length ? filteredServices : [{ descricao: '', valor: 0, garantiaDias: 0 }],
+          { shouldValidate: true }
+        );
       }
     }
 
@@ -280,13 +285,16 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
 
       const payload = {
         ...values,
+        subtotal,
+        total,
         servicos: filteredServices,
         pecas: [],
         tecnico: '',
         tecnicoId: '',
         pagamento: {
           ...values.pagamento,
-          formas: filteredPayments
+          formas: filteredPayments,
+          saldoDevedor
         },
         cliente: {
           ...values.cliente,
@@ -343,7 +351,9 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
             <Select {...form.register('aparelho.marca')}>
               <option value="">Selecione a marca</option>
               {marcasAparelho.map((marca) => (
-                <option key={marca} value={marca}>{marca}</option>
+                <option key={marca} value={marca}>
+                  {marca}
+                </option>
               ))}
             </Select>
             <ErrorText message={form.formState.errors.aparelho?.marca?.message} />
@@ -391,7 +401,10 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
 
           <div className="md:col-span-2">
             <Label>Condição de entrada</Label>
-            <Textarea {...form.register('aparelho.condicaoEntrada')} placeholder="Descreva o estado do aparelho na entrada." />
+            <Textarea
+              {...form.register('aparelho.condicaoEntrada')}
+              placeholder="Descreva o estado do aparelho na entrada."
+            />
             <ErrorText message={form.formState.errors.aparelho?.condicaoEntrada?.message} />
           </div>
         </div>
@@ -409,7 +422,9 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
             ].map((item) => (
               <label
                 key={item.value}
-                className={`cursor-pointer rounded-xl border p-4 ${watchedPasswordType === item.value ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
+                className={`cursor-pointer rounded-xl border p-4 ${
+                  watchedPasswordType === item.value ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'
+                }`}
               >
                 <input
                   type="radio"
@@ -443,7 +458,9 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
                 <Button type="button" onClick={() => setPatternOpen(true)}>
                   Desenhar padrão
                 </Button>
-                <p className="font-mono text-sm text-gray-600">{form.watch('senha.valor') || 'Nenhum padrão definido'}</p>
+                <p className="font-mono text-sm text-gray-600">
+                  {form.watch('senha.valor') || 'Nenhum padrão definido'}
+                </p>
               </CardContent>
             </Card>
           ) : null}
@@ -464,14 +481,21 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Serviços</CardTitle>
-              <Button type="button" size="sm" onClick={() => serviceArray.append({ descricao: '', valor: 0, garantiaDias: 0 })}>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => serviceArray.append({ descricao: '', valor: 0, garantiaDias: 0 })}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar serviço
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {serviceArray.fields.map((field, index) => (
-                <div key={field.id} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[1fr_160px_auto]">
+                <div
+                  key={field.id}
+                  className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[1fr_160px_auto]"
+                >
                   <div>
                     <Input {...form.register(`servicos.${index}.descricao`)} placeholder="Descrição do serviço" />
                     <ErrorText message={form.formState.errors.servicos?.[index]?.descricao?.message} />
@@ -485,8 +509,17 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
                     />
                     <ErrorText message={form.formState.errors.servicos?.[index]?.valor?.message as string | undefined} />
                   </div>
-                  <input type="hidden" {...form.register(`servicos.${index}.garantiaDias`, { valueAsNumber: true })} />
-                  <Button type="button" variant="outline" size="icon" onClick={() => serviceArray.remove(index)} disabled={serviceArray.fields.length === 1}>
+                  <input
+                    type="hidden"
+                    {...form.register(`servicos.${index}.garantiaDias`, { valueAsNumber: true })}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => serviceArray.remove(index)}
+                    disabled={serviceArray.fields.length === 1}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -538,7 +571,10 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
             ) : null}
 
             {paymentArray.fields.map((field, index) => (
-              <div key={field.id} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[200px_140px_120px_auto]">
+              <div
+                key={field.id}
+                className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[200px_140px_120px_auto]"
+              >
                 <Select {...form.register(`pagamento.formas.${index}.tipo`)}>
                   <option value="dinheiro">Dinheiro</option>
                   <option value="pix">PIX</option>
@@ -548,7 +584,13 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
                 </Select>
                 <Input type="number" step="0.01" {...form.register(`pagamento.formas.${index}.valor`, { valueAsNumber: true })} />
                 {form.watch(`pagamento.formas.${index}.tipo`) === 'cartao_credito' ? (
-                  <Input type="number" min={1} max={12} {...form.register(`pagamento.formas.${index}.parcelas`, { valueAsNumber: true })} placeholder="Parcelas" />
+                  <Input
+                    type="number"
+                    min={1}
+                    max={12}
+                    {...form.register(`pagamento.formas.${index}.parcelas`, { valueAsNumber: true })}
+                    placeholder="Parcelas"
+                  />
                 ) : (
                   <div />
                 )}
@@ -683,7 +725,9 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
               <button
                 key={label}
                 type="button"
-                className={`rounded-xl border px-4 py-3 text-left ${step === index ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
+                className={`rounded-xl border px-4 py-3 text-left ${
+                  step === index ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'
+                }`}
                 onClick={() => setStep(index)}
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Etapa {index + 1}</p>
