@@ -2,18 +2,56 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, ClipboardList, Home, Menu, ShoppingCart } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { BarChart3, LayoutDashboard, Menu, Receipt, Wrench } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { canAccessDashboard, canAccessReports } from '@/lib/access';
+import { cn } from '@/lib/utils';
 
-const items = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home, requires: 'dashboard' },
-  { href: '/os', label: 'OS', icon: ClipboardList },
-  { href: '/vendas', label: 'Vendas', icon: ShoppingCart },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart3, requires: 'reports' },
-  { href: '/configuracoes', label: 'Menu', icon: Menu }
-] as const;
+type NavRequirement = 'dashboard' | 'reports';
+
+type BottomNavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requires?: NavRequirement;
+};
+
+function canAccessDashboard(user: ReturnType<typeof useAuth>['user']) {
+  return user?.perfil === 'admin';
+}
+
+function canAccessReports(user: ReturnType<typeof useAuth>['user']) {
+  return user?.perfil === 'admin';
+}
+
+const items: BottomNavItem[] = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    requires: 'dashboard'
+  },
+  {
+    href: '/os',
+    label: 'OS',
+    icon: Wrench
+  },
+  {
+    href: '/vendas',
+    label: 'Vendas',
+    icon: Receipt
+  },
+  {
+    href: '/relatorios',
+    label: 'Relatórios',
+    icon: BarChart3,
+    requires: 'reports'
+  },
+  {
+    href: '/menu',
+    label: 'Menu',
+    icon: Menu
+  }
+];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -26,22 +64,25 @@ export function BottomNav() {
   });
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-2 lg:hidden">
-      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${visibleItems.length}, minmax(0, 1fr))` }}>
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
+      <div className="grid h-16 grid-cols-5">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active =
+            pathname === item.href ||
+            (item.href !== '/dashboard' && item.href !== '/menu' && pathname.startsWith(item.href));
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[11px] font-semibold',
+                'flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors',
                 active ? 'text-red-600' : 'text-gray-500'
               )}
             >
-              <Icon className="mb-1 h-5 w-5" />
-              {item.label}
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
             </Link>
           );
         })}
