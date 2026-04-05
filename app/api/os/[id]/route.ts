@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const user = await getRequestUser(request);
-    const os = await getOrdemServicoById(user.empresaId, params.id);
+    const os = await getOrdemServicoById(params.id);
     if (!os) {
       return NextResponse.json({ error: 'OS não encontrada.' }, { status: 404 });
     }
