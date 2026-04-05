@@ -19,21 +19,6 @@ export type FormaPagamento =
 
 export type LarguraImpressora = '58mm' | '80mm';
 
-export type Empresa = {
-  id: string;
-  nome: string;
-  slogan?: string;
-  cnpj?: string;
-  telefone?: string;
-  endereco?: string;
-  logoUrl?: string;
-  prefixoOS?: string;
-  termosCondicoes?: string;
-  configuracoes: {
-    larguraImpressora: LarguraImpressora;
-  };
-};
-
 export interface SessionUser {
   uid: string;
   email: string;

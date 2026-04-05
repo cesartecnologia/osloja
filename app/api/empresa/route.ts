@@ -1,41 +1,31 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getRequestUser } from '@/lib/auth';
+import { getEmpresa, updateEmpresa } from '@/lib/repositories';
 import { empresaSchema } from '@/lib/validations';
-import { getCurrentUserProfile, updateEmpresa } from '@/lib/client-data';
 
-export async function GET() {
+export const runtime = 'nodejs';
+
+export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUserProfile();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 });
-    }
-
-    return NextResponse.json({ empresaId: user.empresaId });
+    const user = await getRequestUser(request);
+    const empresa = await getEmpresa(user.empresaId);
+    return NextResponse.json(empresa);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao buscar empresa.' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao buscar empresa.' }, { status: 500 });
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const user = await getCurrentUserProfile();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 });
+    const user = await getRequestUser(request);
+    if (user.perfil !== 'admin') {
+      return NextResponse.json({ error: 'Sem permissão.' }, { status: 403 });
     }
 
     const payload = empresaSchema.parse(await request.json());
-
     await updateEmpresa(user.empresaId, payload);
-
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao atualizar empresa.' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao atualizar empresa.' }, { status: 400 });
   }
 }
