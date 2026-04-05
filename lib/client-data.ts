@@ -139,7 +139,9 @@ export async function bootstrapUser(firebaseUser: User): Promise<SessionUser> {
     ativo: profile.ativo
   };
 }
-
+export async function getEmpresa(empresaId = DEFAULT_EMPRESA_ID) {
+  return ensureEmpresa(empresaId);
+}
 type UpdateEmpresaPayload = Partial<Omit<Empresa, 'configuracoes'>> & {
   configuracoes?: Partial<Empresa['configuracoes']>;
 };
