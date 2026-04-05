@@ -336,7 +336,6 @@ export function OSForm({ initialData }: { initialData?: Partial<OrdemServico> })
         previsaoEntrega: values.previsaoEntrega || '',
         status: values.status,
         origemOS: values.origemOS,
-        retiradoPor: values.retiradoPor
       };
 
       const id = await saveOrdemServico(user, payload);
