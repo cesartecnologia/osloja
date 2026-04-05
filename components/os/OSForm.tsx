@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, TriangleAlert, Trash2 } from 'lucide-react';
 import { z } from 'zod';
 import { osSchema } from '@/lib/validations';
-import { OrdemServico } from '@/types';
+import type { Cliente, OrdemServico, SessionUser } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
