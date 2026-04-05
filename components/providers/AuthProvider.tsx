@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
-import { bootstrapUser, getEmpresa } from '@/lib/client-data';
+import { bootstrapUser } from '@/lib/client-data';
+import { getEmpresa } from '@/lib/repositories';
 import { clearAuthCookie, setAuthCookie } from '@/lib/session';
 import { Empresa, SessionUser } from '@/types';
 

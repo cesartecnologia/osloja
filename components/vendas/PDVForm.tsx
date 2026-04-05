@@ -12,7 +12,7 @@ import { ModalImpressaoVenda } from '@/components/vendas/ModalImpressaoVenda';
 import { formatCurrency, formatPhone } from '@/lib/utils';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useFeedback } from '@/components/providers/FeedbackProvider';
-import { createVenda, getEmpresa } from '@/lib/client-data';
+import { createVenda, getEmpresa } from '@/lib/repositories';
 import { Empresa, Venda } from '@/types';
 
 interface CarrinhoItem {
