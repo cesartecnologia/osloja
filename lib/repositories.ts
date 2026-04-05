@@ -1,82 +1,51 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+'use client';
+
+import {
+  createVenda,
+  deleteOrdemServico,
+  getDashboardData,
+  getEmpresa,
+  getOrdemServicoById,
+  listClientes,
+  listOrdensServico,
+  listProdutos,
+  listUsuarios,
+  saveOrdemServico,
+  saveProduto,
+  updateEmpresa,
+  updateUsuarioPerfil,
+} from '@/lib/client-data';
+import type { SessionUser, OrdemServico, Venda, Produto, Empresa, Usuario } from '@/types';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase-client';
-import type { Empresa } from '@/types';
 
-const DEFAULT_EMPRESA_ID = 'default';
-
-const DEFAULT_EMPRESA: Empresa = {
-  id: DEFAULT_EMPRESA_ID,
-  nome: 'Minha Assistência Técnica',
-  slogan: 'Serviço rápido e confiável',
-  prefixoOS: '',
-  termosCondicoes:
-    'Garantia e condições do serviço: descreva aqui as regras que devem aparecer no cupom e no comprovante enviado ao cliente.',
-  configuracoes: {
-    larguraImpressora: '58mm',
-  },
+export {
+  getEmpresa,
+  updateEmpresa,
+  listUsuarios,
+  updateUsuarioPerfil,
+  listClientes,
+  listOrdensServico,
+  getOrdemServicoById,
+  deleteOrdemServico,
+  listProdutos,
+  saveProduto,
+  createVenda,
+  getDashboardData,
 };
 
-type UpdateEmpresaPayload = Partial<Omit<Empresa, 'configuracoes'>> & {
-  configuracoes?: Partial<Empresa['configuracoes']>;
-};
+export const createOrUpdateOS = saveOrdemServico;
 
-function cleanFirestoreData<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => cleanFirestoreData(item))
-      .filter((item) => item !== undefined) as T;
-  }
+export async function listVendas(empresaId: string): Promise<Venda[]> {
+  const snap = await getDocs(
+    query(collection(db, 'vendas'), where('empresaId', '==', empresaId))
+  );
 
-  if (value && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, entryValue]) => entryValue !== undefined)
-      .map(([key, entryValue]) => [key, cleanFirestoreData(entryValue)]);
-    return Object.fromEntries(entries) as T;
-  }
-
-  return value;
-}
-
-export async function getEmpresa(empresaId = DEFAULT_EMPRESA_ID): Promise<Empresa> {
-  const ref = doc(db, 'empresa', empresaId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    const empresa = { ...DEFAULT_EMPRESA, id: empresaId };
-    await setDoc(ref, empresa, { merge: true });
-    return empresa;
-  }
-
-  return {
-    ...DEFAULT_EMPRESA,
-    ...(snap.data() as Empresa),
-    id: empresaId,
-    configuracoes: {
-      larguraImpressora:
-        (snap.data() as Empresa)?.configuracoes?.larguraImpressora ?? '58mm',
-    },
-  };
-}
-
-export async function updateEmpresa(
-  empresaId: string,
-  payload: UpdateEmpresaPayload
-): Promise<Empresa> {
-  const ref = doc(db, 'empresa', empresaId);
-  const current = await getEmpresa(empresaId);
-
-  const merged: Empresa = {
-    ...current,
-    ...payload,
-    id: empresaId,
-    configuracoes: {
-      larguraImpressora:
-        payload.configuracoes?.larguraImpressora ??
-        current.configuracoes?.larguraImpressora ??
-        '58mm',
-    },
-  };
-
-  await setDoc(ref, cleanFirestoreData(merged), { merge: true });
-  return merged;
+  return snap.docs
+    .map((item) => ({ id: item.id, ...(item.data() as Venda) }))
+    .sort(
+      (a, b) =>
+        new Date(String(b.dataCriacao || '')).getTime() -
+        new Date(String(a.dataCriacao || '')).getTime()
+    );
 }

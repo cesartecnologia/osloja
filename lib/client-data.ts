@@ -140,10 +140,6 @@ export async function bootstrapUser(firebaseUser: User): Promise<SessionUser> {
   };
 }
 
-export async function getEmpresa(empresaId: string) {
-  return ensureEmpresa(empresaId);
-}
-
 type UpdateEmpresaPayload = Partial<Omit<Empresa, 'configuracoes'>> & {
   configuracoes?: Partial<Empresa['configuracoes']>;
 };
@@ -153,7 +149,6 @@ export async function updateEmpresa(
   payload: UpdateEmpresaPayload
 ) {
   const ref = doc(db, 'empresa', empresaId);
-
   const current = await getEmpresa(empresaId);
 
   const merged: Empresa = {
@@ -164,8 +159,8 @@ export async function updateEmpresa(
       larguraImpressora:
         payload.configuracoes?.larguraImpressora ??
         current.configuracoes?.larguraImpressora ??
-        '58mm'
-    }
+        '58mm',
+    },
   };
 
   await setDoc(ref, cleanFirestoreData(merged), { merge: true });
