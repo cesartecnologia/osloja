@@ -13,7 +13,15 @@ function MonoDivider({ width }: { width: LarguraImpressora }) {
   return <pre className="font-mono text-[inherit] leading-[inherit]">{divider(width)}</pre>;
 }
 
-function LabelValue({ label, value, uppercase = false }: { label: string; value?: string | number | null; uppercase?: boolean }) {
+function LabelValue({
+  label,
+  value,
+  uppercase = false,
+}: {
+  label: string;
+  value?: string | number | null;
+  uppercase?: boolean;
+}) {
   if (value === undefined || value === null || value === '') return null;
   return (
     <p className={`break-words ${uppercase ? 'uppercase' : ''}`}>
@@ -47,7 +55,11 @@ function HeaderBlock({ empresa }: { empresa: Empresa }) {
       ) : null}
       <p className="text-[1.05em] font-bold uppercase">{empresa.nome}</p>
       {empresa.slogan ? <p className="font-semibold">{empresa.slogan}</p> : null}
-      {empresa.telefone ? <p><span className="font-bold">Tel:</span> {empresa.telefone}</p> : null}
+      {empresa.telefone ? (
+        <p>
+          <span className="font-bold">Tel:</span> {empresa.telefone}
+        </p>
+      ) : null}
       {empresa.endereco ? <p>{empresa.endereco}</p> : null}
     </div>
   );
@@ -78,7 +90,9 @@ function PaymentBlock({ os, width }: { os: OrdemServico; width: LarguraImpressor
     <div>
       <SectionTitle>Pagamento</SectionTitle>
       {os.pagamento.entrada ? (
-        <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine('Entrada', formatCurrency(os.pagamento.entrada), chars)}</pre>
+        <pre className="whitespace-pre-wrap font-mono">
+          {toMonospaceLine('Entrada', formatCurrency(os.pagamento.entrada), chars)}
+        </pre>
       ) : null}
       {forms.map((forma) => (
         <pre key={`${forma.tipo}-${forma.valor}`} className="whitespace-pre-wrap font-mono font-bold">
@@ -86,7 +100,9 @@ function PaymentBlock({ os, width }: { os: OrdemServico; width: LarguraImpressor
         </pre>
       ))}
       {Number(os.pagamento.saldoDevedor || 0) > 0 ? (
-        <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine('Saldo retirada', formatCurrency(Number(os.pagamento.saldoDevedor || 0)), chars)}</pre>
+        <pre className="whitespace-pre-wrap font-mono">
+          {toMonospaceLine('Saldo retirada', formatCurrency(Number(os.pagamento.saldoDevedor || 0)), chars)}
+        </pre>
       ) : null}
       {forms.length === 0 && !os.pagamento.entrada ? <p>Pagamento pendente na retirada.</p> : null}
       <LabelValue label="Status do pagamento" value={getPaymentStatusLabel(os.pagamento.statusPagamento)} />
@@ -158,7 +174,9 @@ function CupomOSCompleta({ empresa, os, width }: { empresa: Empresa; os: OrdemSe
       {os.servicos.map((item) => (
         <div key={`${item.descricao}-${item.valor}`} className="mb-1">
           <p className="font-bold">{item.descricao}</p>
-          <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine('Valor', formatCurrency(item.valor), getPrintChars(width))}</pre>
+          <pre className="whitespace-pre-wrap font-mono">
+            {toMonospaceLine('Valor', formatCurrency(item.valor), getPrintChars(width))}
+          </pre>
         </div>
       ))}
       <MonoDivider width={width} />
@@ -205,7 +223,9 @@ function CupomRetirada({ empresa, os, width }: { empresa: Empresa; os: OrdemServ
 
       <SectionTitle>Serviços previstos</SectionTitle>
       {os.servicos.map((item) => (
-        <p key={item.descricao}>• <span className="font-bold">{item.descricao}</span></p>
+        <p key={item.descricao}>
+          • <span className="font-bold">{item.descricao}</span>
+        </p>
       ))}
       <MonoDivider width={width} />
 
@@ -213,14 +233,24 @@ function CupomRetirada({ empresa, os, width }: { empresa: Empresa; os: OrdemServ
         title="Importante"
         lines={[
           'Somente será permitida a retirada do aparelho',
-          'mediante apresentação deste comprovante.'
+          'mediante apresentação deste comprovante.',
         ]}
       />
     </div>
   );
 }
 
-function CupomEntrega({ empresa, os, width, atendente }: { empresa: Empresa; os: OrdemServico; width: LarguraImpressora; atendente?: string }) {
+function CupomEntrega({
+  empresa,
+  os,
+  width,
+  atendente,
+}: {
+  empresa: Empresa;
+  os: OrdemServico;
+  width: LarguraImpressora;
+  atendente?: string;
+}) {
   const dataEntrega = formatDateBR(os.dataEntrega || new Date().toISOString(), 'dd/MM/yyyy HH:mm');
   const nomeAtendente = atendente || os.retiradoPor || 'Não informado';
 
@@ -247,8 +277,12 @@ function CupomEntrega({ empresa, os, width, atendente }: { empresa: Empresa; os:
       <SectionTitle>Serviços realizados</SectionTitle>
       {os.servicos.map((item) => (
         <div key={`${item.descricao}-${item.valor}`} className="mb-1">
-          <p>• <span className="font-bold">{item.descricao}</span></p>
-          <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine('Valor', formatCurrency(item.valor), getPrintChars(width))}</pre>
+          <p>
+            • <span className="font-bold">{item.descricao}</span>
+          </p>
+          <pre className="whitespace-pre-wrap font-mono">
+            {toMonospaceLine('Valor', formatCurrency(item.valor), getPrintChars(width))}
+          </pre>
         </div>
       ))}
       <MonoDivider width={width} />
@@ -258,13 +292,15 @@ function CupomEntrega({ empresa, os, width, atendente }: { empresa: Empresa; os:
         lines={[
           'Declaro que recebi o aparelho em perfeitas',
           'condições aparentes e com o serviço',
-          'solicitado devidamente concluído.'
+          'solicitado devidamente concluído.',
         ]}
       />
       <MonoDivider width={width} />
 
       <SectionTitle>Pagamento</SectionTitle>
-      <pre className="whitespace-pre-wrap font-mono font-bold">{toMonospaceLine('TOTAL', formatCurrency(os.total), getPrintChars(width))}</pre>
+      <pre className="whitespace-pre-wrap font-mono font-bold">
+        {toMonospaceLine('TOTAL', formatCurrency(os.total), getPrintChars(width))}
+      </pre>
       <LabelValue label="Status do pagamento" value={getPaymentStatusLabel(os.pagamento.statusPagamento)} />
       <LabelValue
         label="Saldo pendente"
@@ -289,7 +325,7 @@ export function CupomImpressao({
   os,
   width = '58mm',
   mode = 'retirada',
-  atendente
+  atendente,
 }: {
   empresa: Empresa;
   os: OrdemServico;
@@ -298,7 +334,7 @@ export function CupomImpressao({
   atendente?: string;
 }) {
   return (
-    <div className={`print-shell rounded-xl border border-gray-200 bg-white p-4 font-mono text-black ${width === '58mm' ? 'cupom-58mm' : 'cupom-80mm'}`}>
+    <div className={`print-shell rounded-xl border border-gray-200 bg-white p-4 text-black ${width === '58mm' ? 'cupom-58mm' : 'cupom-80mm'}`}>
       {mode === 'completo' ? (
         <CupomOSCompleta empresa={empresa} os={os} width={width} />
       ) : mode === 'entrega' ? (

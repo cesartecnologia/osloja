@@ -19,7 +19,11 @@ function HeaderBlock({ empresa }: { empresa: Empresa }) {
       ) : null}
       <p className="text-[1.05em] font-bold uppercase">{empresa.nome}</p>
       {empresa.slogan ? <p className="font-semibold">{empresa.slogan}</p> : null}
-      {empresa.telefone ? <p><span className="font-bold">Tel:</span> {empresa.telefone}</p> : null}
+      {empresa.telefone ? (
+        <p>
+          <span className="font-bold">Tel:</span> {empresa.telefone}
+        </p>
+      ) : null}
       {empresa.endereco ? <p>{empresa.endereco}</p> : null}
     </div>
   );
@@ -42,7 +46,7 @@ export function CupomVenda({
   empresa,
   venda,
   width = '58mm',
-  atendente
+  atendente,
 }: {
   empresa: Empresa;
   venda: Venda;
@@ -53,7 +57,7 @@ export function CupomVenda({
   const paymentForms = (venda.pagamento.formas || []).filter((forma) => Number(forma.valor || 0) > 0);
 
   return (
-    <div className={`print-shell rounded-xl border border-gray-200 bg-white p-4 font-mono text-black ${width === '58mm' ? 'cupom-58mm' : 'cupom-80mm'}`}>
+    <div className={`print-shell rounded-xl border border-gray-200 bg-white p-4 text-black ${width === '58mm' ? 'cupom-58mm' : 'cupom-80mm'}`}>
       <div className="print-cut pb-2 pt-1">
         <HeaderBlock empresa={empresa} />
         <pre className="font-mono">{divider(width)}</pre>
@@ -73,7 +77,9 @@ export function CupomVenda({
         {venda.itens.map((item) => (
           <div key={`${item.nome}-${item.subtotal}`} className="mb-1">
             <p className="font-bold">{item.nome}</p>
-            <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine(`${item.quantidade} x ${formatCurrency(item.valorUnitario)}`, formatCurrency(item.subtotal), chars)}</pre>
+            <pre className="whitespace-pre-wrap font-mono">
+              {toMonospaceLine(`${item.quantidade} x ${formatCurrency(item.valorUnitario)}`, formatCurrency(item.subtotal), chars)}
+            </pre>
           </div>
         ))}
         <pre className="font-mono">{divider(width)}</pre>
@@ -90,7 +96,9 @@ export function CupomVenda({
           </pre>
         ))}
         {Number(venda.pagamento.saldoDevedor || 0) > 0 ? (
-          <pre className="whitespace-pre-wrap font-mono">{toMonospaceLine('Saldo pendente', formatCurrency(Number(venda.pagamento.saldoDevedor || 0)), chars)}</pre>
+          <pre className="whitespace-pre-wrap font-mono">
+            {toMonospaceLine('Saldo pendente', formatCurrency(Number(venda.pagamento.saldoDevedor || 0)), chars)}
+          </pre>
         ) : null}
         <LabelValue label="Status do pagamento" value={getPaymentStatusLabel(venda.pagamento.statusPagamento)} />
         <pre className="font-mono">{divider(width)}</pre>
