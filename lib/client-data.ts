@@ -261,10 +261,18 @@ function normalizeOS(item: OrdemServico): OrdemServico {
   };
 }
 
-export function canTransitionStatus(current: StatusOS, next: StatusOS, perfil: SessionUser['perfil']) {
+export function canTransitionStatus(
+  current: StatusOS,
+  next: StatusOS,
+  perfil: SessionUser['perfil']
+) {
   if (perfil === 'admin') return true;
   if (current === next) return true;
-  if (perfil === 'atendente' && ['cancelado', 'entregue'].includes(next)) return false;
+
+  if (perfil === 'atendente') {
+    return next === 'entregue';
+  }
+
   return statusFlow[current]?.includes(next) ?? false;
 }
 
