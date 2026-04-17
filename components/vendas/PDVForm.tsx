@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD
-import { Eye, MoreVertical, Pencil, Plus, Receipt, Trash2, Ban } from 'lucide-react';
-=======
 import { Ban, Eye, MoreVertical, Pencil, Plus, Printer, Receipt, Trash2 } from 'lucide-react';
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,14 +12,17 @@ import { ModalImpressaoVenda } from '@/components/vendas/ModalImpressaoVenda';
 import { formatCurrency, formatDateBR, formatPhone } from '@/lib/utils';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useFeedback } from '@/components/providers/FeedbackProvider';
-<<<<<<< HEAD
-import { cancelVenda, createVenda, deleteVenda, getEmpresa, listVendas, updateVenda } from '@/lib/repositories';
+import {
+  cancelVenda,
+  createVenda,
+  deleteVenda,
+  getEmpresa,
+  listVendas,
+  updateVenda,
+  type VendaView,
+} from '@/lib/repositories';
 import type { Empresa, Venda } from '@/types';
-=======
-import { cancelVenda, createVenda, deleteVenda, getEmpresa, listVendas, updateVenda, type VendaView } from '@/lib/repositories';
-import { Empresa, Venda } from '@/types';
 import { getPaymentMethodLabel, getPaymentStatusLabel } from '@/lib/labels';
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
 
 interface CarrinhoItem {
   nome: string;
@@ -38,9 +37,6 @@ interface FormaState {
   valor: string;
   parcelas: number;
 }
-
-type VendaStatus = 'ativa' | 'cancelada';
-type VendaView = Venda & { status?: VendaStatus };
 
 const EMPTY_PAYMENT: FormaState = { tipo: 'dinheiro', valor: '', parcelas: 1 };
 
@@ -63,11 +59,6 @@ export function PDVForm() {
   const [lastVenda, setLastVenda] = useState<VendaView | null>(null);
   const [openPrint, setOpenPrint] = useState(false);
   const [paymentTouched, setPaymentTouched] = useState(false);
-  const [vendas, setVendas] = useState<VendaView[]>([]);
-  const [actionsOpenId, setActionsOpenId] = useState<string | null>(null);
-  const [selectedVenda, setSelectedVenda] = useState<VendaView | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [editingVendaId, setEditingVendaId] = useState<string | null>(null);
 
   const [vendas, setVendas] = useState<VendaView[]>([]);
   const [selectedVenda, setSelectedVenda] = useState<VendaView | null>(null);
@@ -85,10 +76,6 @@ export function PDVForm() {
           getEmpresa(user.empresaId),
           listVendas(user.empresaId),
         ]);
-<<<<<<< HEAD
-
-=======
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
         if (ativo) {
           setEmpresa(empresaData);
           setVendas(vendasData);
@@ -111,7 +98,9 @@ export function PDVForm() {
   const descontoNumero = Number(desconto || 0);
 
   const descontoCalculado = useMemo(() => {
-    if (descontoTipo === 'percentual') return subtotal * (descontoNumero / 100);
+    if (descontoTipo === 'percentual') {
+      return subtotal * (descontoNumero / 100);
+    }
     return descontoNumero;
   }, [descontoNumero, descontoTipo, subtotal]);
 
@@ -155,24 +144,16 @@ export function PDVForm() {
       setErro('Informe a descrição do item.');
       return;
     }
+
     if (valor <= 0) {
       setErro('Informe um valor unitário maior que zero.');
       return;
     }
 
-<<<<<<< HEAD
     setItens((current) => [
       ...current,
-      {
-        nome,
-        quantidade: qtd,
-        valorUnitario: valor,
-        subtotal: valor * qtd,
-      },
+      { nome, quantidade: qtd, valorUnitario: valor, subtotal: valor * qtd },
     ]);
-=======
-    setItens((current) => [...current, { nome, quantidade: qtd, valorUnitario: valor, subtotal: valor * qtd }]);
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
     setItemNome('');
     setQuantidade(1);
     setValorUnitario('');
@@ -181,12 +162,13 @@ export function PDVForm() {
 
   async function limparVenda() {
     const ok = await confirm({
-      title: editingVendaId ? 'Cancelar edição' : 'Limpar venda rápida',
-      description: editingVendaId ? 'Deseja cancelar a edição desta venda?' : 'Deseja remover os dados preenchidos desta venda?',
-      confirmText: editingVendaId ? 'Cancelar edição' : 'Limpar',
+      title: 'Limpar venda rápida',
+      description: 'Deseja remover os dados preenchidos desta venda?',
+      confirmText: 'Limpar',
       cancelText: 'Voltar',
       tone: 'warning',
     });
+
     if (ok) resetForm();
   }
 
@@ -213,14 +195,7 @@ export function PDVForm() {
 
       if (editingVendaId) {
         const atualizada = await updateVenda(editingVendaId, {
-<<<<<<< HEAD
-          cliente: {
-            nome: clienteNome.trim(),
-            telefone: clienteTelefone.trim(),
-          },
-=======
           cliente: { nome: clienteNome.trim(), telefone: clienteTelefone.trim() },
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
           itens,
           desconto: Number(desconto || 0),
           descontoTipo,
@@ -229,12 +204,9 @@ export function PDVForm() {
             saldoDevedor,
             statusPagamento: saldoDevedor <= 0 ? 'pago_total' : 'pendente',
           },
-<<<<<<< HEAD
-        } as Partial<Venda> & { itens: Venda['itens'] });
+        });
 
-        setVendas((current) =>
-          current.map((item) => (item.id === editingVendaId ? { ...item, ...atualizada } : item))
-        );
+        setVendas((current) => current.map((item) => (item.id === editingVendaId ? atualizada : item)));
 
         notify({
           title: 'Venda atualizada',
@@ -243,19 +215,7 @@ export function PDVForm() {
         });
       } else {
         const venda = await createVenda(user, {
-          cliente: {
-            nome: clienteNome.trim(),
-            telefone: clienteTelefone.trim(),
-          },
-=======
-        });
-
-        setVendas((current) => current.map((item) => (item.id === editingVendaId ? atualizada : item)));
-        notify({ title: 'Venda atualizada', description: `${atualizada.numeroFormatado} atualizada com sucesso.`, variant: 'success' });
-      } else {
-        const venda = await createVenda(user, {
           cliente: { nome: clienteNome.trim(), telefone: clienteTelefone.trim() },
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
           itens,
           desconto: Number(desconto || 0),
           descontoTipo,
@@ -267,7 +227,6 @@ export function PDVForm() {
         });
 
         const vendaView: VendaView = { ...venda, status: 'ativa' };
-<<<<<<< HEAD
 
         setLastVenda(vendaView);
         setOpenPrint(true);
@@ -278,12 +237,6 @@ export function PDVForm() {
           description: `${venda.numeroFormatado} criada com sucesso.`,
           variant: 'success',
         });
-=======
-        setLastVenda(vendaView);
-        setOpenPrint(true);
-        setVendas((current) => [vendaView, ...current]);
-        notify({ title: 'Venda registrada', description: `${venda.numeroFormatado} criada com sucesso.`, variant: 'success' });
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
       }
 
       resetForm();
@@ -298,7 +251,6 @@ export function PDVForm() {
     setEditingVendaId(venda.id);
     setClienteNome(venda.cliente?.nome || '');
     setClienteTelefone(venda.cliente?.telefone || '');
-<<<<<<< HEAD
     setItens(
       (venda.itens || []).map((item) => ({
         nome: item.nome,
@@ -308,15 +260,6 @@ export function PDVForm() {
         produtoId: item.produtoId,
       }))
     );
-=======
-    setItens((venda.itens || []).map((item) => ({
-      nome: item.nome,
-      quantidade: Number(item.quantidade || 1),
-      valorUnitario: Number(item.valorUnitario || 0),
-      subtotal: Number(item.subtotal || 0),
-      produtoId: item.produtoId,
-    })));
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
     setDesconto(String(Number(venda.desconto || 0)));
     setDescontoTipo(venda.descontoTipo || 'valor');
     setFormas(
@@ -326,11 +269,7 @@ export function PDVForm() {
             valor: String(Number(item.valor || 0)),
             parcelas: Number(item.parcelas || 1),
           }))
-<<<<<<< HEAD
         : [{ ...EMPTY_PAYMENT }]
-=======
-        : [{ ...EMPTY_PAYMENT }],
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
     );
     setPaymentTouched(true);
     setActionsOpenId(null);
@@ -345,25 +284,18 @@ export function PDVForm() {
       cancelText: 'Voltar',
       tone: 'danger',
     });
-<<<<<<< HEAD
 
-=======
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
     if (!ok) return;
 
     await deleteVenda(id);
     setVendas((current) => current.filter((item) => item.id !== id));
     setActionsOpenId(null);
-<<<<<<< HEAD
 
     notify({
       title: 'Venda excluída',
       description: 'A venda foi excluída com sucesso.',
       variant: 'success',
     });
-=======
-    notify({ title: 'Venda excluída', description: 'A venda foi excluída com sucesso.', variant: 'success' });
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
   }
 
   async function cancelarRegistroVenda(id: string) {
@@ -374,14 +306,11 @@ export function PDVForm() {
       cancelText: 'Voltar',
       tone: 'warning',
     });
-<<<<<<< HEAD
 
     if (!ok) return;
 
     const cancelada = await cancelVenda(id);
-    setVendas((current) =>
-      current.map((item) => (item.id === id ? { ...item, ...cancelada } : item))
-    );
+    setVendas((current) => current.map((item) => (item.id === id ? cancelada : item)));
     setActionsOpenId(null);
 
     notify({
@@ -389,14 +318,6 @@ export function PDVForm() {
       description: 'A venda foi marcada como cancelada.',
       variant: 'success',
     });
-=======
-    if (!ok) return;
-
-    const cancelada = await cancelVenda(id);
-    setVendas((current) => current.map((item) => (item.id === id ? cancelada : item)));
-    setActionsOpenId(null);
-    notify({ title: 'Venda cancelada', description: 'A venda foi marcada como cancelada.', variant: 'success' });
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
   }
 
   function abrirDetalhes(venda: VendaView) {
@@ -405,32 +326,24 @@ export function PDVForm() {
     setActionsOpenId(null);
   }
 
-<<<<<<< HEAD
-=======
   function reimprimirVenda(venda: VendaView) {
     setLastVenda(venda);
     setOpenPrint(true);
     setActionsOpenId(null);
   }
 
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
   return (
     <>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Venda rápida</p>
-<<<<<<< HEAD
             <h1 className="text-3xl font-bold text-ink">
               {editingVendaId ? 'Editar venda rápida' : 'Lance uma venda rápida'}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
               Informe cliente, descrição do item e valor. As vendas ficam listadas abaixo com ações rápidas.
             </p>
-=======
-            <h1 className="text-3xl font-bold text-ink">{editingVendaId ? 'Editar venda rápida' : 'Lance uma venda rápida'}</h1>
-            <p className="mt-1 text-sm text-gray-500">Informe cliente, descrição do item e valor. As vendas ficam listadas abaixo com ações rápidas.</p>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={limparVenda}>
@@ -451,7 +364,11 @@ export function PDVForm() {
               <div className="grid gap-4 md:grid-cols-[1.5fr_120px_180px_auto]">
                 <div>
                   <Label>Descrição do item</Label>
-                  <Input value={itemNome} onChange={(e) => setItemNome(e.target.value)} placeholder="Ex.: Capinha Samsung A54, película, carregador..." />
+                  <Input
+                    value={itemNome}
+                    onChange={(e) => setItemNome(e.target.value)}
+                    placeholder="Ex.: Capinha Samsung A54, película, carregador..."
+                  />
                 </div>
                 <div>
                   <Label>Quantidade</Label>
@@ -476,7 +393,10 @@ export function PDVForm() {
                 </div>
               </div>
 
-              <CarrinhoVendas itens={itens} onRemove={(index) => setItens((current) => current.filter((_, i) => i !== index))} />
+              <CarrinhoVendas
+                itens={itens}
+                onRemove={(index) => setItens((current) => current.filter((_, i) => i !== index))}
+              />
             </CardContent>
           </Card>
 
@@ -492,7 +412,11 @@ export function PDVForm() {
               </div>
               <div>
                 <Label>Telefone</Label>
-                <Input value={clienteTelefone} onChange={(e) => setClienteTelefone(formatPhone(e.target.value))} placeholder="(00) 00000-0000" />
+                <Input
+                  value={clienteTelefone}
+                  onChange={(e) => setClienteTelefone(formatPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -527,7 +451,15 @@ export function PDVForm() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Pagamento</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setPaymentTouched(true); setFormas((current) => [...current, { ...EMPTY_PAYMENT }]); }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPaymentTouched(true);
+                      setFormas((current) => [...current, { ...EMPTY_PAYMENT }]);
+                    }}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar forma
                   </Button>
@@ -535,7 +467,6 @@ export function PDVForm() {
 
                 {formas.map((forma, index) => (
                   <div key={index} className="grid gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-[1fr_160px_80px_auto]">
-<<<<<<< HEAD
                     <Select
                       value={forma.tipo}
                       onChange={(e) => {
@@ -545,16 +476,12 @@ export function PDVForm() {
                         );
                       }}
                     >
-=======
-                    <Select value={forma.tipo} onChange={(e) => { setPaymentTouched(true); setFormas((current) => current.map((item, i) => (i === index ? { ...item, tipo: e.target.value as FormaState['tipo'] } : item))); }}>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
                       <option value="dinheiro">Dinheiro</option>
                       <option value="pix">PIX</option>
                       <option value="cartao_credito">Cartão de crédito</option>
                       <option value="cartao_debito">Cartão de débito</option>
                       <option value="transferencia">Transferência</option>
                     </Select>
-<<<<<<< HEAD
                     <Input
                       type="number"
                       min={0}
@@ -581,15 +508,21 @@ export function PDVForm() {
                           );
                         }}
                       />
-=======
-                    <Input type="number" min={0} step="0.01" value={forma.valor} onChange={(e) => { setPaymentTouched(true); setFormas((current) => current.map((item, i) => (i === index ? { ...item, valor: e.target.value } : item))); }} placeholder="Valor" />
-                    {forma.tipo === 'cartao_credito' ? (
-                      <Input type="number" min={1} max={12} value={forma.parcelas} onChange={(e) => { setPaymentTouched(true); setFormas((current) => current.map((item, i) => (i === index ? { ...item, parcelas: Number(e.target.value) } : item))); }} />
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
                     ) : (
                       <div className="rounded-lg border border-transparent px-3 py-2 text-center text-xs text-gray-400">1x</div>
                     )}
-                    <Button type="button" variant="outline" size="icon" onClick={() => { setPaymentTouched(true); setFormas((current) => current.length === 1 ? [{ ...EMPTY_PAYMENT }] : current.filter((_, i) => i !== index)); }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setPaymentTouched(true);
+                        setFormas((current) => {
+                          if (current.length === 1) return [{ ...EMPTY_PAYMENT }];
+                          return current.filter((_, i) => i !== index);
+                        });
+                      }}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -609,7 +542,6 @@ export function PDVForm() {
 
               <Button type="button" className="w-full" disabled={loading || itens.length === 0} onClick={finalizarVenda}>
                 <Receipt className="mr-2 h-4 w-4" />
-<<<<<<< HEAD
                 {loading
                   ? editingVendaId
                     ? 'Salvando...'
@@ -617,9 +549,6 @@ export function PDVForm() {
                   : editingVendaId
                     ? 'Salvar alterações'
                     : 'Finalizar venda e imprimir cupom'}
-=======
-                {loading ? (editingVendaId ? 'Salvando...' : 'Finalizando...') : (editingVendaId ? 'Salvar alterações' : 'Finalizar venda e imprimir cupom')}
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
               </Button>
             </CardContent>
           </Card>
@@ -628,11 +557,7 @@ export function PDVForm() {
         <Card>
           <CardHeader>
             <CardTitle>Vendas registradas</CardTitle>
-<<<<<<< HEAD
-            <CardDescription>Use o botão de ações para detalhar, editar, cancelar ou excluir.</CardDescription>
-=======
             <CardDescription>Use o botão de ações para detalhar, editar, reimprimir, cancelar ou excluir.</CardDescription>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
           </CardHeader>
           <CardContent className="space-y-3">
             {!vendas.length ? (
@@ -650,7 +575,6 @@ export function PDVForm() {
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <p className="font-semibold">{formatCurrency(venda.total)}</p>
-<<<<<<< HEAD
                         <p className={`text-xs ${venda.status === 'cancelada' ? 'text-red-600' : 'text-gray-500'}`}>
                           {venda.status === 'cancelada' ? 'Cancelada' : 'Ativa'}
                         </p>
@@ -663,19 +587,11 @@ export function PDVForm() {
                           size="icon"
                           onClick={() => setActionsOpenId((current) => (current === venda.id ? null : venda.id))}
                         >
-=======
-                        <p className={`text-xs ${venda.status === 'cancelada' ? 'text-red-600' : 'text-gray-500'}`}>{venda.status === 'cancelada' ? 'Cancelada' : 'Ativa'}</p>
-                      </div>
-
-                      <div className="relative">
-                        <Button type="button" variant="outline" size="icon" onClick={() => setActionsOpenId((current) => current === venda.id ? null : venda.id)}>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
                           <MoreVertical className="h-4 w-4" />
                         </Button>
 
                         {actionsOpenId === venda.id ? (
-<<<<<<< HEAD
-                          <div className="absolute right-0 top-12 z-20 min-w-[180px] rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
+                          <div className="absolute right-0 top-12 z-20 min-w-[200px] rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
                             <button
                               type="button"
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
@@ -694,7 +610,15 @@ export function PDVForm() {
                             </button>
                             <button
                               type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+                              onClick={() => reimprimirVenda(venda)}
+                            >
+                              <Printer className="h-4 w-4" />
+                              Reimprimir
+                            </button>
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-amber-700 hover:bg-amber-50"
                               onClick={() => void cancelarRegistroVenda(venda.id)}
                               disabled={venda.status === 'cancelada'}
                             >
@@ -706,26 +630,6 @@ export function PDVForm() {
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50"
                               onClick={() => void excluirVenda(venda.id)}
                             >
-=======
-                          <div className="absolute right-0 top-12 z-20 min-w-[190px] rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
-                            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50" onClick={() => abrirDetalhes(venda)}>
-                              <Eye className="h-4 w-4" />
-                              Detalhar
-                            </button>
-                            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50" onClick={() => editarVenda(venda)}>
-                              <Pencil className="h-4 w-4" />
-                              Editar
-                            </button>
-                            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50" onClick={() => reimprimirVenda(venda)}>
-                              <Printer className="h-4 w-4" />
-                              Reimprimir
-                            </button>
-                            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-amber-700 hover:bg-amber-50 disabled:opacity-60" onClick={() => void cancelarRegistroVenda(venda.id)} disabled={venda.status === 'cancelada'}>
-                              <Ban className="h-4 w-4" />
-                              Cancelar
-                            </button>
-                            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50" onClick={() => void excluirVenda(venda.id)}>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
                               <Trash2 className="h-4 w-4" />
                               Excluir
                             </button>
@@ -736,7 +640,6 @@ export function PDVForm() {
                   </div>
 
                   <div className="mt-3 grid gap-2 text-sm text-gray-600 md:grid-cols-3">
-<<<<<<< HEAD
                     <div>
                       <span className="font-medium text-ink">Itens:</span> {venda.itens.length}
                     </div>
@@ -744,13 +647,11 @@ export function PDVForm() {
                       <span className="font-medium text-ink">Telefone:</span> {venda.cliente?.telefone || '-'}
                     </div>
                     <div>
-                      <span className="font-medium text-ink">Pagamento:</span> {venda.pagamento?.statusPagamento || '-'}
+                      <span className="font-medium text-ink">Pagamento:</span>{' '}
+                      {venda.pagamento?.statusPagamento
+                        ? getPaymentStatusLabel(venda.pagamento.statusPagamento)
+                        : '-'}
                     </div>
-=======
-                    <div><span className="font-medium text-ink">Itens:</span> {venda.itens.length}</div>
-                    <div><span className="font-medium text-ink">Telefone:</span> {venda.cliente?.telefone || '-'}</div>
-                    <div><span className="font-medium text-ink">Pagamento:</span> {getPaymentStatusLabel(venda.pagamento?.statusPagamento)}</div>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
                   </div>
                 </div>
               ))
@@ -764,7 +665,7 @@ export function PDVForm() {
           open={openPrint}
           onClose={() => setOpenPrint(false)}
           empresa={empresa}
-          venda={lastVenda as Venda}
+          venda={lastVenda}
           defaultWidth={empresa.configuracoes?.larguraImpressora || '58mm'}
           atendente={user?.nome}
           autoPrint
@@ -779,34 +680,66 @@ export function PDVForm() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Detalhes da venda</p>
                 <h3 className="text-2xl font-bold text-ink">{selectedVenda.numeroFormatado}</h3>
               </div>
-<<<<<<< HEAD
               <Button type="button" variant="outline" onClick={() => setDetailsOpen(false)}>
                 Fechar
               </Button>
-=======
-              <Button type="button" variant="outline" onClick={() => setDetailsOpen(false)}>Fechar</Button>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
             </div>
 
             <div className="mt-5 space-y-4">
               <div className="grid gap-2 md:grid-cols-2">
-                <div><span className="font-medium text-ink">Cliente:</span> {selectedVenda.cliente?.nome || 'Consumidor final'}</div>
-                <div><span className="font-medium text-ink">Telefone:</span> {selectedVenda.cliente?.telefone || '-'}</div>
-                <div><span className="font-medium text-ink">Data:</span> {formatDateBR(selectedVenda.dataCriacao, 'dd/MM/yyyy HH:mm')}</div>
-                <div><span className="font-medium text-ink">Status:</span> {selectedVenda.status === 'cancelada' ? 'Cancelada' : 'Ativa'}</div>
-<<<<<<< HEAD
-=======
-                <div><span className="font-medium text-ink">Status do pagamento:</span> {selectedVenda.pagamento?.statusPagamento ? getPaymentStatusLabel(selectedVenda.pagamento.statusPagamento) : '-'}</div>
+                <div>
+                  <span className="font-medium text-ink">Cliente:</span> {selectedVenda.cliente?.nome || 'Consumidor final'}
+                </div>
+                <div>
+                  <span className="font-medium text-ink">Telefone:</span> {selectedVenda.cliente?.telefone || '-'}
+                </div>
+                <div>
+                  <span className="font-medium text-ink">Data:</span> {formatDateBR(selectedVenda.dataCriacao, 'dd/MM/yyyy HH:mm')}
+                </div>
+                <div>
+                  <span className="font-medium text-ink">Status:</span> {selectedVenda.status === 'cancelada' ? 'Cancelada' : 'Ativa'}
+                </div>
+                <div>
+                  <span className="font-medium text-ink">Status do pagamento:</span>{' '}
+                  {selectedVenda.pagamento?.statusPagamento
+                    ? getPaymentStatusLabel(selectedVenda.pagamento.statusPagamento)
+                    : '-'}
+                </div>
                 <div>
                   <span className="font-medium text-ink">Forma de pagamento:</span>{' '}
                   {(selectedVenda.pagamento?.formas || []).filter((item) => Number(item.valor || 0) > 0).length > 0
                     ? (selectedVenda.pagamento.formas || [])
                         .filter((item) => Number(item.valor || 0) > 0)
-                        .map((item) => item.tipo === 'cartao_credito' && item.parcelas ? `${getPaymentMethodLabel(item.tipo)} ${item.parcelas}x` : getPaymentMethodLabel(item.tipo))
+                        .map((item) =>
+                          item.tipo === 'cartao_credito' && item.parcelas
+                            ? `${getPaymentMethodLabel(item.tipo)} ${item.parcelas}x`
+                            : getPaymentMethodLabel(item.tipo)
+                        )
                         .join(', ')
                     : 'Não informado'}
                 </div>
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
+              </div>
+
+              <div className="rounded-xl border border-gray-200 p-4">
+                <p className="mb-3 font-semibold text-ink">Pagamento</p>
+                <div className="space-y-2 text-sm">
+                  {(selectedVenda.pagamento?.formas || []).filter((item) => Number(item.valor || 0) > 0).length === 0 ? (
+                    <p className="text-gray-500">Nenhuma forma de pagamento informada.</p>
+                  ) : (
+                    (selectedVenda.pagamento.formas || [])
+                      .filter((item) => Number(item.valor || 0) > 0)
+                      .map((item, index) => (
+                        <div key={`${item.tipo}-${index}`} className="flex items-center justify-between gap-3">
+                          <span>
+                            {item.tipo === 'cartao_credito' && item.parcelas
+                              ? `${getPaymentMethodLabel(item.tipo)} ${item.parcelas}x`
+                              : getPaymentMethodLabel(item.tipo)}
+                          </span>
+                          <strong>{formatCurrency(Number(item.valor || 0))}</strong>
+                        </div>
+                      ))
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl border border-gray-200 p-4">
@@ -821,31 +754,19 @@ export function PDVForm() {
                 </div>
               </div>
 
-<<<<<<< HEAD
-=======
-              <div className="rounded-xl border border-gray-200 p-4">
-                <p className="mb-3 font-semibold text-ink">Pagamento</p>
-                <div className="space-y-2 text-sm">
-                  {(selectedVenda.pagamento?.formas || []).filter((item) => Number(item.valor || 0) > 0).length === 0 ? (
-                    <p className="text-gray-500">Nenhuma forma de pagamento informada.</p>
-                  ) : (
-                    (selectedVenda.pagamento.formas || [])
-                      .filter((item) => Number(item.valor || 0) > 0)
-                      .map((item, index) => (
-                        <div key={`${item.tipo}-${index}`} className="flex items-center justify-between gap-3">
-                          <span>{item.tipo === 'cartao_credito' && item.parcelas ? `${getPaymentMethodLabel(item.tipo)} ${item.parcelas}x` : getPaymentMethodLabel(item.tipo)}</span>
-                          <strong>{formatCurrency(Number(item.valor || 0))}</strong>
-                        </div>
-                      ))
-                  )}
-                </div>
-              </div>
-
->>>>>>> 2e248d5 (feat: corrige vendas e adiciona acoes com reimpressao)
               <div className="rounded-xl bg-gray-50 p-4 text-sm">
-                <div className="flex items-center justify-between py-1"><span>Subtotal</span><strong>{formatCurrency(selectedVenda.subtotal)}</strong></div>
-                <div className="flex items-center justify-between py-1"><span>Desconto</span><strong>{formatCurrency(selectedVenda.desconto)}</strong></div>
-                <div className="flex items-center justify-between py-1 text-base"><span>Total</span><strong>{formatCurrency(selectedVenda.total)}</strong></div>
+                <div className="flex items-center justify-between py-1">
+                  <span>Subtotal</span>
+                  <strong>{formatCurrency(selectedVenda.subtotal)}</strong>
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <span>Desconto</span>
+                  <strong>{formatCurrency(selectedVenda.desconto)}</strong>
+                </div>
+                <div className="flex items-center justify-between py-1 text-base">
+                  <span>Total</span>
+                  <strong>{formatCurrency(selectedVenda.total)}</strong>
+                </div>
               </div>
             </div>
           </div>
