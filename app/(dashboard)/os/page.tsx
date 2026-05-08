@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/select';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { listOrdensServico } from '@/lib/client-data';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 
 function startOfDay(date: Date) {
   const copy = new Date(date);
@@ -105,36 +105,36 @@ export default function OSPage() {
   const hasFilters = Boolean(search || status || periodo !== 'todos');
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-red-600">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-red-600">
             Ordens de serviço
           </p>
           <h1 className="text-2xl font-bold text-ink md:text-3xl">
             Acompanhe todas as OS
           </h1>
           <p className="mt-1 text-xs text-gray-500 md:text-sm">
-            Busque rápido por cliente, número, telefone ou aparelho e acompanhe o fluxo da oficina.
+            Busque rápido por cliente, número, telefone ou aparelho.
           </p>
         </div>
 
         <Link href="/os/nova">
-          <Button className="h-10 px-4">
+          <Button className="h-9 px-4">
             <Plus className="mr-2 h-4 w-4" />
             Nova OS
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
         {resumo.map((item) => (
           <Card key={item.label} className="border-gray-200">
             <CardContent className="p-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
                 {item.label}
               </p>
-              <p className="mt-1.5 text-xl font-bold text-ink md:text-2xl">
+              <p className="mt-1 text-lg font-bold text-ink md:text-xl">
                 {item.value}
               </p>
             </CardContent>
@@ -143,24 +143,24 @@ export default function OSPage() {
       </div>
 
       <Card className="border-gray-200">
-        <CardContent className="space-y-3 p-3 md:p-4">
+        <CardContent className="space-y-3 p-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-ink">
             <Filter className="h-4 w-4 text-red-600" />
             Filtros da listagem
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[1.5fr_210px_170px_auto]">
+          <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-[1.6fr_200px_160px_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                className="h-10 pl-9"
+                className="h-9 pl-9"
                 placeholder="Buscar por cliente, número, telefone ou modelo"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
-            <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10">
+            <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9">
               <option value="">Todos os status</option>
               <option value="aguardando">Aguardando</option>
               <option value="em_andamento">Em andamento</option>
@@ -170,7 +170,7 @@ export default function OSPage() {
               <option value="cancelado">Cancelado</option>
             </Select>
 
-            <Select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="h-10">
+            <Select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="h-9">
               <option value="todos">Todo período</option>
               <option value="hoje">Hoje</option>
               <option value="7">Últimos 7 dias</option>
@@ -181,7 +181,7 @@ export default function OSPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-10"
+              className="h-9"
               disabled={!hasFilters}
               onClick={() => {
                 setSearch('');
@@ -194,10 +194,10 @@ export default function OSPage() {
             </Button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 md:text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
             <p>
               Mostrando <strong className="text-ink">{paginated.length}</strong> de{' '}
-              <strong className="text-ink">{filtered.length}</strong> OS encontradas.
+              <strong className="text-ink">{filtered.length}</strong> OS.
             </p>
             <p>
               Página <strong className="text-ink">{currentPage}</strong> de{' '}
@@ -212,7 +212,7 @@ export default function OSPage() {
 
       {!loading && !erro ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {paginated.map((ordem) => (
               <OSCard key={ordem.id} os={ordem} />
             ))}
@@ -227,7 +227,7 @@ export default function OSPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10"
+                className="h-9"
                 disabled={currentPage <= 1}
                 onClick={() => setPagina((value) => Math.max(1, value - 1))}
               >
@@ -242,7 +242,7 @@ export default function OSPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10"
+                className="h-9"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPagina((value) => Math.min(totalPages, value + 1))}
               >
